@@ -1,0 +1,23 @@
+{
+  "name": "twitterbot",
+  "version": "1.0.0",
+  "description": "twitter bot",
+  "main": "index.js",
+  "dependencies": {
+    "node": "^15.8.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/super-nimbus/twitterbot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/super-nimbus/twitterbot/issues"
+  },
+  "homepage": "https://github.com/super-nimbus/twitterbot#readme"
+}
