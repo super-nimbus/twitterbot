@@ -4,7 +4,9 @@
   "description": "twitter bot",
   "main": "index.js",
   "dependencies": {
-    "node": "^15.8.0"
+    "node": "^15.8.0",
+    "twit": "^2.2.11",
+    "twitter-v2": "^1.0.3"
   },
   "devDependencies": {},
   "scripts": {
