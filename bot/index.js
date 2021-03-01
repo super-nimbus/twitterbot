@@ -5,30 +5,31 @@ const fs = require('fs');
 
 // Import twitter account credentials
 const creds = require("./config");
-const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require("constants");
 
 async function main() {
 
+
     // CONSTANTS/BOT SETTINGS
     /////////////////////////////
-    // Hashtags to scrape
+    // Hashtags to track (format as "#hashtag")
     const hashtags = [
         "#occmed",
-        "#occenvmed"
+        "#occenvmed",
     ];
 
     // Number of latest results to choose from (range 10 - 100 inclusive)
     const numTweets = 10;
 
-    // Blacklisted users (spam, etc) (format as "@handle" with @ removed)
+    // Blacklisted users (spammers, etc) (format as "@handle")
     const blacklist = [
-        "doctorsdilemma",
+        //"@doctorsdilemma",
     ]
     
     // Allow bot to retweet retweets and/or replies
     const allowRetweets = false; // Uses Twitter API v2 for querying
     const allowReplies = false; // Uses Twitter API v1 for retweeting
     /////////////////////////////
+
 
     // Authenticate new Twitter clients
     const searchClient = new Twitter(creds.twitter);
@@ -64,16 +65,21 @@ async function main() {
     // Check for errors
     if (errors) {
         console.log('Errors:', errors);
+        throw errors;
     }
 
     // Print data
-    // console.log(tweets);
+     console.log(tweets);
     // console.log(includes);
     // console.log(meta);
 
 
     ////// Filter
 
+    // Remove @
+    for (let i = 0; i < blacklist.length; i++) {
+        blacklist[i] = blacklist[i].slice(1);
+    }
 
     // Check for blacklisted users
     let users = includes.users;
@@ -101,11 +107,15 @@ async function main() {
         
 
     ////// Cache Compare
-    let history = JSON.parse(fs.readFileSync('./history.json', 'utf8'));
-
-    if (history === undefined) {
-        history = [];
+    let history = fs.readFileSync('./history.json', 'utf8');
+    
+    if (!history) {
+        history = {};
+    } else {
+        history = JSON.parse(history);
     }
+    
+    
 
     // Pick a random tweet
     let randomNum;
@@ -117,15 +127,12 @@ async function main() {
         tweetId = tweets[randomNum].id;
         
         // console.log(randomNum);
-        // console.log(tweetId);
+         console.log(tweetId);
 
-        for (let i = 0; i < history.length; i++) {
-            if (history[i].id === tweetId) {
-                retry = true;
-                break;
-            }
-
+        if (tweetId in history) {
+            retry = true;
         }
+
     } while (retry);
 
 
@@ -135,16 +142,20 @@ async function main() {
     retweetClient.post('statuses/retweet/:tweetId', {tweetId: tweetId}, (err, data, res) => {
         //console.log(res);
         //console.log(data);
-        //console.log(err);
+        if (err) {
+            console.log(err);
+            throw err;
+        }
     });
     
 
     ////// Cache Store
-    history.push(tweets[randomNum]);
+    history[tweetId] = tweets[randomNum];
     const json = JSON.stringify(history, null, 2);
     fs.writeFileSync('./history.json', json, err => {
         if (err) {
             console.log('Error writing to file', err)
+            throw err;
         }
     })
 
