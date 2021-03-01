@@ -6,6 +6,15 @@ const fs = require('fs');
 // Import twitter account credentials
 const creds = require("./config");
 
+// Sleep Function for time delay
+function sleep(duration) {
+	return new Promise(resolve => {
+		setTimeout(() => {
+			resolve()
+		}, duration * 1000)
+	})
+}
+
 async function main() {
 
 
@@ -17,13 +26,16 @@ async function main() {
         "#occenvmed",
     ];
 
-    // Number of latest results to choose from (range 10 - 100 inclusive)
-    const numTweets = 10;
-
     // Blacklisted users (spammers, etc) (format as "@handle")
     const blacklist = [
         //"@doctorsdilemma",
     ]
+
+    // Number of retweets to make
+    const numRetweets = 2;
+
+    // Number of latest results to retrieve from twitter (range 10 - 100 inclusive)
+    const numTweets = 50;
     
     // Allow bot to retweet retweets and/or replies
     const allowRetweets = false; // Uses Twitter API v2 for querying
@@ -35,9 +47,7 @@ async function main() {
     const searchClient = new Twitter(creds.twitter);
     const retweetClient = new Twit(creds.twit);
 
-
     ////// Query
-
 
     // Build query
     const hashtagString = "("+ hashtags.join(" OR ") + ")";
@@ -73,7 +83,6 @@ async function main() {
     // console.log(includes);
     // console.log(meta);
 
-
     ////// Filter
 
     // Remove @
@@ -105,8 +114,7 @@ async function main() {
         }
     }
         
-
-    ////// Cache Compare
+    ////// Cache Compare: Pull retweeted history
     let history = fs.readFileSync('./history.json', 'utf8');
     
     if (!history) {
@@ -115,42 +123,46 @@ async function main() {
         history = JSON.parse(history);
     }
     
-    
+    // Retweet the desired number of tweets
+    for (let i = 0; i < numRetweets; i++) {
+        // Pick a random tweet
+        let randomNum;
+        let tweetId;
+        let retry = false;
+        do {
+            retry = false;
+            randomNum = Math.floor(Math.random() * tweets.length);
+            tweetId = tweets[randomNum].id;
+            
+            // console.log(randomNum);
+            console.log(tweetId);
 
-    // Pick a random tweet
-    let randomNum;
-    let tweetId;
-    let retry = false;
-    do {
-        retry = false;
-        randomNum = Math.floor(Math.random() * tweets.length);
-        tweetId = tweets[randomNum].id;
+            if (tweetId in history) {
+                retry = true;
+            }
+
+        } while (retry);
+
+        ////// Retweet
+        retweetClient.post('statuses/retweet/:tweetId', {tweetId: tweetId}, (err, data, res) => {
+            //console.log(res);
+            //console.log(data);
+            if (err) {
+                console.log(err);
+                throw err;
+            }
+        });
         
-        // console.log(randomNum);
-         console.log(tweetId);
+        ////// Cache Store: Append latest tweet
+        history[tweetId] = tweets[randomNum];
 
-        if (tweetId in history) {
-            retry = true;
+        // Sleep 1 minute between tweets
+        if (i+1 != numRetweets) {
+            await sleep(60);
         }
+    }
 
-    } while (retry);
-
-
-    ////// Retweet
-
-
-    retweetClient.post('statuses/retweet/:tweetId', {tweetId: tweetId}, (err, data, res) => {
-        //console.log(res);
-        //console.log(data);
-        if (err) {
-            console.log(err);
-            throw err;
-        }
-    });
-    
-
-    ////// Cache Store
-    history[tweetId] = tweets[randomNum];
+    ////// Cache Store: Write to file
     const json = JSON.stringify(history, null, 2);
     fs.writeFileSync('./history.json', json, err => {
         if (err) {
@@ -158,12 +170,6 @@ async function main() {
             throw err;
         }
     })
-
-    
-    ////// Repeat
-    // TODO: put on a sleep/time delay 
-
-
 }
 
 if (require.main === module) {
