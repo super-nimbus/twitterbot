@@ -24,19 +24,30 @@ async function main() {
     const hashtags = [
         "#occmed",
         "#occenvmed",
+        "#OEM",
+        "#occupationalmedicine",
+        "#occupationalhealth",
+    ];
+
+    // Greenlisted users to follow (not implemented)
+    const greenlist = [
     ];
 
     // Blacklisted users (spammers, etc) (format as "@handle")
     const blacklist = [
-        //"@doctorsdilemma",
-    ]
+        "@MDJobSite",
+        "@DoctorJobsUSA",
+    ];
 
     // Number of retweets to make
-    const numRetweets = 2;
+    const numRetweets = 1;
 
     // Number of latest results to retrieve from twitter (range 10 - 100 inclusive)
-    const numTweets = 50;
-    
+    const numTweets = 10;
+
+    // Time delay between retweets
+    const delaySeconds = 30;
+
     // Allow bot to retweet retweets and/or replies
     const allowRetweets = false; // Uses Twitter API v2 for querying
     const allowReplies = false; // Uses Twitter API v1 for retweeting
@@ -52,11 +63,14 @@ async function main() {
     // Build query
     const hashtagString = "("+ hashtags.join(" OR ") + ")";
     const retweets = (!allowRetweets?" -is:retweet":"");
-    const replies = (!allowReplies?"  -is:reply":"");
+    const replies = (!allowReplies?" -is:reply":"");
+
+    const fullQuery = hashtagString + retweets + replies + " lang:en";
+    console.log(fullQuery);
 
     // Make GET Request for tweet data
     let {data: tweets, includes, meta, errors } = await searchClient.get("tweets/search/recent", {
-        query: hashtagString + retweets + replies + " lang:en",
+        query: fullQuery,
         max_results: numTweets,
         tweet: {
             fields: [
@@ -124,11 +138,16 @@ async function main() {
     }
     
     // Retweet the desired number of tweets
+    let failed = false;
     for (let i = 0; i < numRetweets; i++) {
         // Pick a random tweet
         let randomNum;
         let tweetId;
         let retry = false;
+        const maxRetries = 50;
+        let attempt = 1;
+
+        // Pick a tweet that hasnt already been retweeted
         do {
             retry = false;
             randomNum = Math.floor(Math.random() * tweets.length);
@@ -137,11 +156,21 @@ async function main() {
             // console.log(randomNum);
             console.log(tweetId);
 
-            if (tweetId in history) {
+            if (tweetId in history && attempt != maxRetries) {
                 retry = true;
+                break;
             }
 
+            attempt++;
         } while (retry);
+
+        // A new tweet couldnt be found
+        if (attempt >= maxRetries) {
+            failed = true;
+            console.log("No new tweets found to retweet. Exiting");
+            break;
+        }
+
 
         ////// Retweet
         retweetClient.post('statuses/retweet/:tweetId', {tweetId: tweetId}, (err, data, res) => {
@@ -158,7 +187,7 @@ async function main() {
 
         // Sleep 1 minute between tweets
         if (i+1 != numRetweets) {
-            await sleep(60);
+            await sleep(delaySeconds);
         }
     }
 

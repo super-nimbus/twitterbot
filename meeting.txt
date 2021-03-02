@@ -1,0 +1,6 @@
+@occmedbot
+
+Potential Additional Features
+- Reading/green list (prioritize high quality twitter accounts)
+- Retweet on tag/mention
+- Retweet priority on activity metrics
