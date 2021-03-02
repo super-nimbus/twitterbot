@@ -173,7 +173,6 @@ async function main() {
             break;
         }
 
-
         ////// Retweet
         retweetClient.post('statuses/retweet/:tweetId', {tweetId: tweetId}, (err, data, res) => {
             //console.log(res);
@@ -192,7 +191,7 @@ async function main() {
         ////// Cache Store: Append latest tweet
         history[tweetId] = tweets[randomNum];
 
-        // Sleep 1 minute between tweets
+        // Sleep specified time (in seconds) between tweets
         if (i+1 != numRetweets) {
             await sleep(delaySeconds);
         }
