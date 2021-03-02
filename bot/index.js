@@ -3,8 +3,9 @@ const Twitter = require("twitter-v2");
 const Twit = require("twit");
 const fs = require('fs');
 
-// Import twitter account credentials
-const creds = require("./config");
+// Use environment vars
+const dotenv = require("dotenv");
+dotenv.config();
 
 // Sleep Function for time delay
 function sleep(duration) {
@@ -55,8 +56,9 @@ async function main() {
 
 
     // Authenticate new Twitter clients
-    const searchClient = new Twitter(creds.twitter);
-    const retweetClient = new Twit(creds.twit);
+    const searchClient = new Twitter({consumer_key: process.env.CONSUMER_KEY, consumer_secret: process.env.CONSUMER_SECRET});
+    const retweetClient = new Twit({consumer_key: process.env.CONSUMER_KEY, consumer_secret: process.env.CONSUMER_SECRET, 
+                                    access_token: process.env.ACCESS_TOKEN, access_token_secret: process.env.ACCESS_TOKEN_SECRET});
 
     ////// Query
 
@@ -178,6 +180,11 @@ async function main() {
             //console.log(data);
             if (err) {
                 console.log(err);
+                // If status code 403, already retweeted tweet.
+                if (err.statusCode == 403) {
+                    i--;
+                    continue;
+                }
                 throw err;
             }
         });
