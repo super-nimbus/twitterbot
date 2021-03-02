@@ -183,9 +183,9 @@ async function main() {
                 // If status code 403, already retweeted tweet.
                 if (err.statusCode == 403) {
                     i--;
-                    continue;
+                } else {
+                    throw err;
                 }
-                throw err;
             }
         });
         
