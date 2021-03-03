@@ -18,36 +18,35 @@ function sleep(duration) {
 
 async function main() {
 
-
-    // CONSTANTS/BOT SETTINGS
+    // BOT SETTINGS
     /////////////////////////////
     // Hashtags to track (format as "#hashtag")
     const hashtags = [
         "#occmed",
         "#occenvmed",
-        "#OEM",
+        //"#OEM",
         "#occupationalmedicine",
         "#occupationalhealth",
+    ];
+
+    // Blacklisted users (spammers, job postings, etc) (format as "@handle")
+    const blacklist = [
+        "@MDJobSite",
+        "@DoctorJobsUSA",
     ];
 
     // Greenlisted users to follow (not implemented)
     const greenlist = [
     ];
 
-    // Blacklisted users (spammers, etc) (format as "@handle")
-    const blacklist = [
-        "@MDJobSite",
-        "@DoctorJobsUSA",
-    ];
-
     // Number of retweets to make
     const numRetweets = 1;
 
     // Number of latest results to retrieve from twitter (range 10 - 100 inclusive)
-    const numTweets = 10;
+    const numTweets = 30;
 
-    // Time delay between retweets
-    const delaySeconds = 30;
+    // Time delay between retweets (seconds)
+    const delaySeconds = 60;
 
     // Allow bot to retweet retweets and/or replies
     const allowRetweets = false; // Uses Twitter API v2 for querying
