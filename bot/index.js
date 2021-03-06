@@ -29,6 +29,15 @@ async function main() {
         "#occupationalhealth",
     ];
 
+    // Hashtags/words to exclude
+    const excludeTags = [
+        "#job",
+        "#jobs",
+        "hiring",
+        "job",
+        "jobs",
+    ]
+
     // Blacklisted users (spammers, job postings, etc) (format as "@handle")
     const blacklist = [
         "@MDJobSite",
@@ -62,7 +71,7 @@ async function main() {
     ////// Query
 
     // Build query
-    const hashtagString = "("+ hashtags.join(" OR ") + ")";
+    const hashtagString = "("+ hashtags.join(" OR ") + ")" + (excludeTags? " -" + excludeTags.join(" -"):"");
     const retweets = (!allowRetweets?" -is:retweet":"");
     const replies = (!allowReplies?" -is:reply":"");
 
